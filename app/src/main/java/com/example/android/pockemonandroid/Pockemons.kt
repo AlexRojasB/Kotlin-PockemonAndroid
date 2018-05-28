@@ -1,5 +1,7 @@
 package com.example.android.pockemonandroid
 
+import android.location.Location
+
 class Pockemon {
     var Name:String ?=null
     var Descr:String ?=null
@@ -8,12 +10,15 @@ class Pockemon {
     var Lat:Double ?=null
     var Long:Double ?=null
     var IsCatched = false
+    var Locationn:Location?=null
+
     constructor(name:String, image:Int, des:String, power:Double, lat:Double, log:Double){
         this.Name = name
         this.Image = image
         this.Descr = des
         this.Power = power
-        this.Lat = lat
-        this.Long = log
+        this.Locationn = Location(name)
+        this.Locationn!!.latitude = lat
+        this.Locationn!!.longitude = log
     }
 }

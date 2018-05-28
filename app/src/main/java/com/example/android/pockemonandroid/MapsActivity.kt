@@ -10,7 +10,6 @@ import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
-import android.text.Html
 import android.widget.Toast
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -20,17 +19,19 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import kotlin.concurrent.thread
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    var listPockemons = ArrayList<Pockemon>()
+    var PockemonList = ArrayList<Pockemon>()
+    var PlayerPower = 0.0
+    var AccessLocationCode = 123
+    var location:Location?= null
 
     fun LoadPockemon(){
-        listPockemons.add(Pockemon("Bulbasaur", R.drawable.bulbasaur, "Bulbasaur living in USA", 55.0, 37.7789994893035,-122.401846647263))
-        listPockemons.add(Pockemon("Charmander", R.drawable.charmander, "Charmander living in Japan", 90.5, 37.7949568502667,-122.410494089127))
-        listPockemons.add(Pockemon("Squirtle", R.drawable.squirtle, "Bulbasaur living in Iraq", 33.5, 37.7816621152613,-122.41225361824))
+        PockemonList.add(Pockemon("Bulbasaur", R.drawable.bulbasaur, "Bulbasaur living in USA", 55.0, 37.7789994893035,-122.401846647263))
+        PockemonList.add(Pockemon("Charmander", R.drawable.charmander, "Charmander living in Japan", 90.5, 37.7949568502667,-122.410494089127))
+        PockemonList.add(Pockemon("Squirtle", R.drawable.squirtle, "Bulbasaur living in Iraq", 33.5, 37.7816621152613,-122.41225361824))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,11 +46,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         checkPermission()
     }
 
-    var accessLocation = 123
     fun checkPermission(){
         if(Build.VERSION.SDK_INT >= 23){
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-                requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), accessLocation)
+                requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), AccessLocationCode)
                 return
             }
         }
@@ -67,7 +67,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when(requestCode){
-            accessLocation ->{
+            AccessLocationCode ->{
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     GetUserLocation()
                 }else{
@@ -98,7 +98,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.mario)))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 14f))
     }
-    var location:Location?= null
 
     inner class UserLocationListener:LocationListener{
 
@@ -135,13 +134,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                    runOnUiThread {
                        mMap.clear()
 
-                       for (pockemon in listPockemons){
+                       for (pockemon in PockemonList){
                            if (!pockemon.IsCatched){
                                mMap.addMarker(MarkerOptions()
-                                       .position(LatLng(pockemon.Lat!!, pockemon.Long!!))
+                                       .position(LatLng(pockemon.Locationn!!.latitude, pockemon.Locationn!!.longitude))
                                        .title(pockemon.Name)
-                                       .snippet(pockemon.Descr)
+                                       .snippet(pockemon.Descr + ", power: " + pockemon.Power)
                                        .icon(BitmapDescriptorFactory.fromResource(pockemon.Image!!)))
+                               if (location!!.distanceTo(pockemon.Locationn) < 2){
+                                   pockemon.IsCatched = true
+                                   PlayerPower += pockemon.Power!!
+                                   Toast.makeText(applicationContext, "You catch new pockemon your new power is: " + PlayerPower, Toast.LENGTH_SHORT).show()
+                               }
                            }
                        }
                        val userLoc = LatLng(location!!.latitude, location!!.longitude)
